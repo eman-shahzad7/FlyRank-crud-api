@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
@@ -16,6 +16,11 @@ tasks = [
 
 class TaskCreate(BaseModel):
     title: Optional[str] = None
+
+
+class TaskUpdate(BaseModel):
+    title: Optional[str] = None
+    done: Optional[bool] = None
 
 
 def error(status: int, message: str):
@@ -60,3 +65,28 @@ def create_task(body: TaskCreate):
     task = {"id": next_id, "title": body.title.strip(), "done": False}
     tasks.append(task)
     return task
+
+
+@app.put("/tasks/{task_id}")
+def update_task(task_id: int, body: TaskUpdate):
+    task = find_task(task_id)
+    if task is None:
+        return error(404, f"Task {task_id} not found")
+    if body.title is None and body.done is None:
+        return error(400, "send at least one of: title, done")
+    if body.title is not None:
+        if not body.title.strip():
+            return error(400, "title cannot be empty")
+        task["title"] = body.title.strip()
+    if body.done is not None:
+        task["done"] = body.done
+    return task
+
+
+@app.delete("/tasks/{task_id}", status_code=204)
+def delete_task(task_id: int):
+    task = find_task(task_id)
+    if task is None:
+        return error(404, f"Task {task_id} not found")
+    tasks.remove(task)
+    return Response(status_code=204)
