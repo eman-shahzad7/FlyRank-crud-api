@@ -1,15 +1,21 @@
-# Task API
+# Task API (SQLite version)
 
-A small to-do list API built with FastAPI. Data is stored in memory (no database).
+A to-do list API built with FastAPI and SQLite. Tasks are saved in a database file, so they survive server restarts.
 
-## Install and run
+## Why SQLite?
+SQLite needs no separate database server. The whole database is one file, which makes it perfect for learning and small projects.
+
+## Where is the database?
+In `tasks.db`, in the same folder as `main.py`. It is created automatically the first time the app runs, together with the `tasks` table and 3 example tasks (only if the table is empty).
+
+## How to start
 
 ```bash
 pip install "fastapi[standard]"
 fastapi dev main.py
 ```
 
-The server runs at http://localhost:8000 and the Swagger UI is at http://localhost:8000/docs.
+Server: http://localhost:8000 · Swagger UI: http://localhost:8000/docs
 
 ## Endpoints
 
@@ -23,18 +29,12 @@ The server runs at http://localhost:8000 and the Swagger UI is at http://localho
 | PUT | /tasks/{id} | Update a task | 200 | 400, 404 |
 | DELETE | /tasks/{id} | Delete a task | 204 | 404 |
 
-## Example curl output
+## Database viewer
 
-```http
-HTTP/1.1 200 OK
-date: Wed, 25 Nov 2026 22:35:25 GMT
-server: uvicorn
-content-length: 45
-content-type: application/json
+![DB Browser for SQLite](db_screenshot.png)
 
-{"id":1,"title":"Learn FastAPI","done":false}
+## Example SQL query I ran
+
+```sql
+SELECT * FROM tasks WHERE done = 1;
 ```
-
-## Swagger UI
-
-![Swagger UI](docs.png)
