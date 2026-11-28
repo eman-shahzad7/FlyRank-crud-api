@@ -1,11 +1,17 @@
 import sqlite3
+from typing import Optional
 
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 
 DB_FILE = "tasks.db"
 
 app = FastAPI(title="Task API", version="2.0")
+
+
+class TaskCreate(BaseModel):
+    title: Optional[str] = None
 
 
 def get_connection():
@@ -75,4 +81,19 @@ def get_task(task_id: int):
     conn.close()
     if row is None:
         return error(404, "Task not found")
+    return row_to_task(row)
+
+
+@app.post("/tasks", status_code=201)
+def create_task(body: TaskCreate):
+    if body.title is None or not body.title.strip():
+        return error(400, "title is required and cannot be empty")
+    conn = get_connection()
+    cursor = conn.execute(
+        "INSERT INTO tasks (title, done) VALUES (?, 0)", (body.title.strip(),)
+    )
+    conn.commit()
+    new_id = cursor.lastrowid
+    row = conn.execute("SELECT * FROM tasks WHERE id = ?", (new_id,)).fetchone()
+    conn.close()
     return row_to_task(row)
